@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+    <!-- Create app_events table -->
+    <changeSet id="1" author="quarkus-setup">
+        <comment>Create app_events table for application event logging</comment>
+        <createTable tableName="app_events">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="event_type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(500)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="event_data" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <!-- Add index on event_type for better query performance -->
+        <createIndex indexName="idx_app_events_event_type" tableName="app_events">
+            <column name="event_type"/>
+        </createIndex>
+        
+        <!-- Add index on created_at for better sorting performance -->
+        <createIndex indexName="idx_app_events_created_at" tableName="app_events">
+            <column name="created_at"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Add serial column and modify event_data to JSONB -->
+    <changeSet id="2" author="quarkus-setup">
+        <comment>Add serial column for request correlation and change event_data to JSONB</comment>
+        
+        <!-- Add serial column with default value for existing rows -->
+        <addColumn tableName="app_events">
+            <column name="serial" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        
+        <!-- Drop existing event_data column and recreate as JSONB -->
+        <dropColumn tableName="app_events" columnName="event_data"/>
+        <addColumn tableName="app_events">
+            <column name="event_data" type="JSONB">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        
+        <!-- Add index on serial for better query performance -->
+        <createIndex indexName="idx_app_events_serial" tableName="app_events">
+            <column name="serial"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
