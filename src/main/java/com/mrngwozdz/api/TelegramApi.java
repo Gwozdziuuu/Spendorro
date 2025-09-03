@@ -47,4 +47,20 @@ public interface TelegramApi {
     @Path("/webhook")
     RestResponse<?> receiveWebhook(TelegramUpdate update);
 
+    @Operation(
+            summary = "Get webhook info",
+            description = "Get current webhook configuration from Telegram"
+    )
+    @GET
+    @Path("/webhook-info")
+    RestResponse<?> getWebhookInfo();
+
+    @Operation(
+            summary = "Test webhook endpoint",
+            description = "Test webhook endpoint with sample data"
+    )
+    @POST
+    @Path("/test-webhook")
+    RestResponse<?> testWebhook();
+
 }

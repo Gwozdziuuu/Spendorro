@@ -17,6 +17,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.event.Observes;
+import io.quarkus.runtime.StartupEvent;
 
 @ApplicationScoped
 public class TelegramService {
@@ -26,28 +28,56 @@ public class TelegramService {
     private final TelegramClient telegramClient;
     private final String botToken;
     private final String webhookUrl;
+    private final String botUsername;
 
     @Inject
     public TelegramService(
             @RestClient TelegramClient telegramClient,
             @ConfigProperty(name = "telegram.bot.token") String botToken,
-            @ConfigProperty(name = "telegram.webhook.url") String webhookUrl) {
+            @ConfigProperty(name = "telegram.webhook.url") String webhookUrl,
+            @ConfigProperty(name = "telegram.bot.username") String botUsername) {
         this.telegramClient = telegramClient;
         this.botToken = botToken;
         this.webhookUrl = webhookUrl;
+        this.botUsername = botUsername;
     }
 
-    @PostConstruct
-    public void setupWebhook() {
+    void onStart(@Observes StartupEvent ev) {
+        logger.info("=== TELEGRAM BOT STARTUP ===");
+        logger.info("Bot username: @{}", botUsername);
+        logger.info("Bot token: {}...{}", 
+            botToken.substring(0, Math.min(10, botToken.length())), 
+            botToken.length() > 10 ? botToken.substring(botToken.length() - 4) : "");
+        logger.info("Webhook URL: {}", webhookUrl);
+        
+        setupWebhookAndNotify();
+    }
+    
+    private void setupWebhookAndNotify() {
         if (webhookUrl != null && !webhookUrl.trim().isEmpty() && !webhookUrl.contains("localhost")) {
-            Either<Failure, Success<String>> result = setWebhook(webhookUrl + "/telegram/webhook");
+            String fullWebhookUrl = webhookUrl + "/telegram/webhook";
+            logger.info("Setting up webhook: {}", fullWebhookUrl);
+            
+            Either<Failure, Success<String>> result = setWebhook(fullWebhookUrl);
             if (result.isLeft()) {
-                logger.warn("Failed to setup webhook: {}", result.getLeft().message());
+                logger.error("❌ Failed to setup webhook: {}", result.getLeft().message());
+                sendStartupNotification("❌ Bot started but webhook setup failed: " + result.getLeft().message());
             } else {
-                logger.info("Webhook setup successfully: {}", webhookUrl + "/telegram/webhook");
+                logger.info("✅ Webhook setup successfully: {}", fullWebhookUrl);
+                sendStartupNotification("✅ Spendorro bot is online and ready!");
             }
         } else {
             logger.info("Webhook URL not configured or is localhost - skipping webhook setup");
+            sendStartupNotification("🔧 Spendorro bot started in development mode (no webhook)");
+        }
+    }
+    
+    private void sendStartupNotification(String message) {
+        try {
+            String adminChatId = "1234567890"; // TODO: Move to config
+            sendMessage(adminChatId, message + "\n\nTime: " + java.time.LocalDateTime.now());
+        } catch (Exception e) {
+            logger.warn("Could not send startup notification: {}", e.getMessage());
         }
     }
 
@@ -129,6 +159,18 @@ public class TelegramService {
         } catch (Exception e) {
             return Either.left(
                 Failure.of(ErrorCode.UNKNOWN, "Error deleting webhook").with("exception", e.getMessage())
+            );
+        }
+    }
+
+    public Either<Failure, Success<String>> getWebhookInfo() {
+        try (Response response = telegramClient.getWebhookInfo(botToken)) {
+            String body = response.readEntity(String.class);
+            logger.info("Webhook info response: {}", body);
+            return SendMessageUtils.processResponse(response);
+        } catch (Exception e) {
+            return Either.left(
+                Failure.of(ErrorCode.UNKNOWN, "Error getting webhook info").with("exception", e.getMessage())
             );
         }
     }

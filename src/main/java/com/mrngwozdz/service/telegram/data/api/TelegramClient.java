@@ -28,4 +28,8 @@ public interface TelegramClient {
     @Path("/bot{token}/deleteWebhook")
     Response deleteWebhook(@PathParam("token") String token);
 
+    @POST
+    @Path("/bot{token}/getWebhookInfo")
+    Response getWebhookInfo(@PathParam("token") String token);
+
 }
