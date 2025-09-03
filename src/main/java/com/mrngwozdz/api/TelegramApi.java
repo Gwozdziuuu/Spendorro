@@ -1,6 +1,7 @@
 package com.mrngwozdz.api;
 
 import com.mrngwozdz.api.model.request.TelegramMessageRequest;
+import com.mrngwozdz.service.telegram.data.api.model.TelegramUpdate;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -31,5 +32,19 @@ public interface TelegramApi {
     @POST
     @Path("/send-message")
     RestResponse<?> sendMessage(TelegramMessageRequest request);
+
+    @Operation(
+            summary = "Receive webhook from Telegram",
+            description = "Receives incoming messages from Telegram bot webhook",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Webhook processed successfully"
+                    )
+            }
+    )
+    @POST
+    @Path("/webhook")
+    RestResponse<?> receiveWebhook(TelegramUpdate update);
 
 }
