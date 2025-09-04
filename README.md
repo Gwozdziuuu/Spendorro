@@ -58,4 +58,3 @@ If you want to learn more about building native executables, please consult <htt
 - Dashbuilder ([guide](https://quarkiverse.github.io/quarkiverse-docs/quarkus-dashbuilder/dev/index.html)): Dashbuilder extension for embedding dashboards in a Quarkus application
 - Liquibase ([guide](https://quarkus.io/guides/liquibase)): Handle your database schema migrations with Liquibase
 - JDBC Driver - PostgreSQL ([guide](https://quarkus.io/guides/datasource)): Connect to the PostgreSQL database via JDBC
-.
