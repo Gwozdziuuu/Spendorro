@@ -43,11 +43,16 @@ public class RequestResponseLoggerInterceptor {
         }
         
         // Log as event with serial UUID
-        appEventService.logEvent(serial, new EventRequest(
-                "API_REQUEST", 
-                String.format("[%s] API call to %s.%s", requestId, className, methodName),
-                String.format("{\"requestId\":\"%s\",\"parameters\":%s}", requestId, requestData)
-        ));
+        try {
+            String eventData = String.format("{\"requestId\":\"%s\",\"parameters\":%s}", requestId, requestData);
+            appEventService.logEvent(serial, new EventRequest(
+                    "API_REQUEST", 
+                    String.format("[%s] API call to %s.%s", requestId, className, methodName),
+                    eventData
+            ));
+        } catch (Exception e) {
+            log.warn("Failed to log event for request {}: {}", requestId, e.getMessage());
+        }
         
         Object result = null;
         Exception exception = null;
@@ -67,22 +72,31 @@ public class RequestResponseLoggerInterceptor {
                 log.error("[{}] Error in {}.{} after {}ms - Error: {}", 
                         requestId, className, methodName, duration, exception.getMessage());
                 
-                appEventService.logEvent(serial, new EventRequest(
-                        "API_ERROR",
-                        String.format("[%s] API error in %s.%s", requestId, className, methodName),
-                        String.format("{\"requestId\":\"%s\",\"error\":\"%s\",\"duration\":%d}", requestId, exception.getMessage(), duration)
-                ));
+                try {
+                    String errorMessage = exception.getMessage() != null ? exception.getMessage().replace("\"", "\\\"") : "Unknown error";
+                    appEventService.logEvent(serial, new EventRequest(
+                            "API_ERROR",
+                            String.format("[%s] API error in %s.%s", requestId, className, methodName),
+                            String.format("{\"requestId\":\"%s\",\"error\":\"%s\",\"duration\":%d}", requestId, errorMessage, duration)
+                    ));
+                } catch (Exception logException) {
+                    log.warn("Failed to log error event for request {}: {}", requestId, logException.getMessage());
+                }
             } else {
                 // Log successful response
-                String responseData = serializeResponse(result);
-                log.info("[{}] Response from {}.{} after {}ms - Response: {}", 
-                        requestId, className, methodName, duration, responseData);
-                
-                appEventService.logEvent(serial, new EventRequest(
-                        "API_RESPONSE",
-                        String.format("[%s] API response from %s.%s", requestId, className, methodName),
-                        String.format("{\"requestId\":\"%s\",\"duration\":%d,\"response\":%s}", requestId, duration, responseData)
-                ));
+                try {
+                    String responseData = serializeResponse(result);
+                    log.info("[{}] Response from {}.{} after {}ms - Response: {}", 
+                            requestId, className, methodName, duration, responseData);
+                    
+                    appEventService.logEvent(serial, new EventRequest(
+                            "API_RESPONSE",
+                            String.format("[%s] API response from %s.%s", requestId, className, methodName),
+                            String.format("{\"requestId\":\"%s\",\"duration\":%d,\"response\":%s}", requestId, duration, responseData)
+                    ));
+                } catch (Exception logException) {
+                    log.warn("Failed to log response event for request {}: {}", requestId, logException.getMessage());
+                }
             }
         }
     }
@@ -92,9 +106,24 @@ public class RequestResponseLoggerInterceptor {
             if (parameters == null || parameters.length == 0) {
                 return "[]";
             }
-            return objectMapper.writeValueAsString(Arrays.asList(parameters));
+            
+            // Handle special cases that can't be serialized directly
+            Object[] processedParams = new Object[parameters.length];
+            for (int i = 0; i < parameters.length; i++) {
+                Object param = parameters[i];
+                if (param == null) {
+                    processedParams[i] = null;
+                } else if (param.getClass().getSimpleName().contains("FileUpload")) {
+                    // For file upload requests, just log metadata
+                    processedParams[i] = "{\"type\":\"FileUpload\",\"class\":\"" + param.getClass().getSimpleName() + "\"}";
+                } else {
+                    processedParams[i] = param;
+                }
+            }
+            
+            return objectMapper.writeValueAsString(Arrays.asList(processedParams));
         } catch (Exception e) {
-            return "[Error serializing parameters: " + e.getMessage() + "]";
+            return "\"[Error serializing parameters: " + e.getMessage().replace("\"", "\\\"") + "]\"";
         }
     }
 

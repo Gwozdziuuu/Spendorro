@@ -32,26 +32,4 @@ public class TelegramController implements TelegramApi {
         return RestResults.from(response);
     }
 
-    @Override
-    public RestResponse<?> getWebhookInfo() {
-        var response = telegramService.getWebhookInfo();
-        return RestResults.from(response);
-    }
-
-    @Override
-    public RestResponse<?> testWebhook() {
-        var testUpdate = new com.mrngwozdz.service.telegram.data.api.model.TelegramUpdate(
-            123L,
-            new com.mrngwozdz.service.telegram.data.api.model.TelegramMessage(
-                456L,
-                new com.mrngwozdz.service.telegram.data.api.model.TelegramUser(789L, false, "Test", "User", "testuser", "en"),
-                new com.mrngwozdz.service.telegram.data.api.model.TelegramChat(789L, "private", null, null, "Test", "User"),
-                System.currentTimeMillis() / 1000,
-                "Test message from webhook test endpoint"
-            )
-        );
-        
-        var response = telegramService.processWebhook(testUpdate);
-        return RestResults.from(response);
-    }
 }

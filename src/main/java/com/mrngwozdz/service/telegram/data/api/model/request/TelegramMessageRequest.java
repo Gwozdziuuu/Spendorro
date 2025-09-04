@@ -1,4 +1,4 @@
-package com.mrngwozdz.service.telegram.data.api.model;
+package com.mrngwozdz.service.telegram.data.api.model.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

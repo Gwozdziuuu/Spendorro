@@ -1,6 +1,6 @@
 package com.mrngwozdz.service.telegram.data.api;
 
-import com.mrngwozdz.service.telegram.data.api.model.TelegramMessageRequest;
+import com.mrngwozdz.service.telegram.data.api.model.request.TelegramMessageRequest;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import jakarta.ws.rs.POST;
@@ -23,13 +23,5 @@ public interface TelegramClient {
     @Path("/bot{token}/setWebhook")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     Response setWebhook(@PathParam("token") String token, @FormParam("url") String url);
-
-    @POST
-    @Path("/bot{token}/deleteWebhook")
-    Response deleteWebhook(@PathParam("token") String token);
-
-    @POST
-    @Path("/bot{token}/getWebhookInfo")
-    Response getWebhookInfo(@PathParam("token") String token);
 
 }
