@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat - Spendorro</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/chat.css" />
+</head>
+<body>
+    <!-- Header -->
+    <div class="page-header">
+        <h1 class="page-title">Spendorro Chat</h1>
+        <p class="page-subtitle">Komunikacja z aplikacją</p>
+        <nav class="nav-links">
+            <a href="/">← Powrót do strony głównej</a>
+        </nav>
+    </div>
+
+    <!-- Main Chat Container -->
+    <div class="main-content">
+        <div class="chat-container">
+            <!-- Messages Area -->
+            <div id="messages" class="messages-container">
+                <div class="system-message">
+                    <p>Witaj! Napisz cokolwiek, aby rozpocząć rozmowę.</p>
+                    <p>Możesz używać komend jak /start lub /help</p>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-container">
+                <div class="input-group">
+                    <input 
+                        type="file" 
+                        id="fileInput" 
+                        accept="image/*"
+                        style="display: none"
+                    />
+                    <button id="attachButton" type="button" class="attach-btn" title="Dodaj zdjęcie">
+                        📎
+                    </button>
+                    <input 
+                        type="text" 
+                        id="messageInput" 
+                        placeholder="Napisz wiadomość lub dodaj zdjęcie..." 
+                        autocomplete="off"
+                    />
+                    <button id="sendButton" type="button">Wyślij</button>
+                </div>
+                
+                <!-- File Preview Area -->
+                <div id="filePreview" class="file-preview" style="display: none;">
+                    <div class="preview-container">
+                        <img id="previewImage" class="preview-image" />
+                        <button id="removeFile" class="remove-file-btn" title="Usuń plik">✕</button>
+                    </div>
+                    <div class="file-info">
+                        <span id="fileName"></span>
+                        <span id="fileSize"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Area -->
+            <div id="status" class="status-container" style="display: none;">
+                <span class="status-text">Wysyłanie...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load API model classes in correct dependency order -->
+    <!-- DTOs first -->
+    <script src="js/api/model/EventItemDTO.js"></script>
+    <script src="js/api/model/EventGroupDTO.js"></script>
+    
+    <!-- Request models -->
+    <script src="js/api/model/request/MessageRequest.js"></script>
+    <script src="js/api/model/request/FileUploadRequest.js"></script>
+    
+    <!-- Response models -->
+    <script src="js/api/model/response/ProcessMessage.js"></script>
+    <script src="js/api/model/response/ProcessMessageResponse.js"></script>
+    <script src="js/api/model/response/GetEventsResponse.js"></script>
+    
+    <!-- API Client -->
+    <script src="js/api-client.js"></script>
+    
+    <!-- Chat application -->
+    <script src="js/chat.js"></script>
+</body>
+</html>

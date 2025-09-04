@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Event Monitor - Quarkus Application (SOLID refactor)</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
 <!-- Header -->
@@ -12,6 +12,9 @@
     <div id="banner-container" class="banner-text" style="display: none;"></div>
     <h1 class="page-title">Executions</h1>
     <p class="page-subtitle">API events and requests in real-time</p>
+    <nav class="nav-links">
+        <a href="/chat.html">💬 Chat</a>
+    </nav>
 </div>
 
 <!-- Main -->
@@ -52,6 +55,24 @@
     </div>
 </div>
 
-<script type="module" src="app.js"></script>
+<!-- Load API model classes in correct dependency order -->
+<!-- DTOs first -->
+<script src="js/api/model/EventItemDTO.js"></script>
+<script src="js/api/model/EventGroupDTO.js"></script>
+
+<!-- Request models -->
+<script src="js/api/model/request/MessageRequest.js"></script>
+<script src="js/api/model/request/FileUploadRequest.js"></script>
+
+<!-- Response models -->
+<script src="js/api/model/response/ProcessMessage.js"></script>
+<script src="js/api/model/response/ProcessMessageResponse.js"></script>
+<script src="js/api/model/response/GetEventsResponse.js"></script>
+
+<!-- API Client -->
+<script src="js/api-client.js"></script>
+
+<!-- Main application -->
+<script src="js/app.js"></script>
 </body>
 </html>

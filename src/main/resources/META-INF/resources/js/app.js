@@ -175,23 +175,9 @@ class EventsTableView {
 }
 
 // --- Data / API ---
-class ApiClient {
-    async getEvents() {
-        const res = await fetch('/events');
-        if (!res.ok) {
-            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        }
-        const data = await res.json();
-        return Array.isArray(data?.events) ? data.events : [];
-    }
-
-    async getBanner() {
-        const res = await fetch('/banner');
-        if (!res.ok) {
-            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        }
-        return await res.text();
-    }
+// API calls moved to api-client.js - using RestApiClient
+class ApiClient extends RestApiClient {
+    // Inherits all API methods from RestApiClient
 }
 
 // --- Application (orchestrator) ---

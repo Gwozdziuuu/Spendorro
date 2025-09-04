@@ -29,7 +29,25 @@ body {
 .page-subtitle { 
     font-size: 1rem; 
     opacity: .8; 
-    margin: .5rem 0 0; 
+    margin: .5rem 0 1rem; 
+}
+
+.nav-links {
+    margin-top: 1rem;
+}
+
+.nav-links a {
+    color: #fff;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    transition: background-color 0.2s;
+    margin: 0 0.5rem;
+}
+
+.nav-links a:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .main-content { 
