@@ -1,0 +1,70 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: spendorro
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "9432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  spendorro:
+    image: spendorro:fixed-zlib
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "9081:8081"
+    environment:
+      QUARKUS_HTTP_PORT: 8081
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/spendorro
+      QUARKUS_DATASOURCE_USERNAME: postgres
+      QUARKUS_DATASOURCE_PASSWORD: password
+      TELEGRAM_BOT_TOKEN: 8397385598:AAGu5myCIRYiY2uFM8CU1u-vEklQUQ-21Kg
+      TELEGRAM_BOT_USERNAME: categorizzo_bot
+      TELEGRAM_WEBHOOK_URL: http://localhost:8081
+  minio:
+    image: quay.io/minio/minio:latest
+    command: server /data --console-address ":9001"
+    ports:
+      - "9100:9000"   # API
+      - "9101:9001"   # Console
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: [ "CMD", "mc", "alias", "set", "local", "http://localhost:9000", "minioadmin", "minioadmin" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3.3
+    command: start-dev --import-realm
+    ports:
+      - "9080:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/spendorro
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: password
+    volumes:
+      - ./keycloak/spendorro-realm-export.json:/opt/keycloak/data/import/spendorro-realm-export.json
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  minio_data:

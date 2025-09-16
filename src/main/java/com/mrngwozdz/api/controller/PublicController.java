@@ -23,8 +23,7 @@ public class PublicController implements PublicApi {
 
     @Override
     public Response processMessage(MessageRequest request) {
-        var either = publicMessageService.process(request.getText());
-        
+        var either = publicMessageService.process(request);
         return either.fold(
             failure -> Response.status(failure.getHttpStatus())
                              .entity(Map.of("error", failure.message(), "code", failure.code().name()))

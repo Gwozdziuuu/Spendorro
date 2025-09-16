@@ -189,7 +189,7 @@ class App {
         this.table = table;
         this.modal = modal;
         this.state = { groups: [] };
-        this.eventSource = null;
+        this.pollingInterval = null;
     }
 
     async init() {
@@ -214,8 +214,8 @@ class App {
             });
             this._showContainer(true);
             
-            // Connect to SSE stream after initial load
-            this._connectToEventStream();
+            // Start polling for new events
+            this._startPolling();
         } catch (err) {
             this.error.show(`Error loading events: ${err.message}`);
         } finally {
@@ -223,63 +223,48 @@ class App {
         }
     }
 
-    _connectToEventStream() {
-        if (this.eventSource) {
-            this.eventSource.close();
+
+    _startPolling() {
+        if (this.pollingInterval) {
+            clearInterval(this.pollingInterval);
         }
 
-        this.eventSource = new EventSource('/events/stream');
-
-        this.eventSource.onmessage = (event) => {
+        this.pollingInterval = setInterval(async () => {
             try {
-                const newGroup = JSON.parse(event.data);
-                this._addOrUpdateGroup(newGroup);
+                const groups = await this.api.getEvents();
+                this._updateGroups(groups);
             } catch (error) {
-                console.error('Error parsing SSE event data:', error);
+                console.error('Polling failed:', error);
             }
-        };
-
-        this.eventSource.onerror = (error) => {
-            console.error('EventSource failed:', error);
-            // Try to reconnect after 5 seconds
-            setTimeout(() => this._connectToEventStream(), 5000);
-        };
-
-        this.eventSource.onopen = () => {
-            console.log('Connected to event stream');
-        };
+        }, 5000); // Poll every 5 seconds
     }
 
-    _addOrUpdateGroup(newGroup) {
-        // Find existing group by serial (UUID)
-        const existingIndex = this.state.groups.findIndex(g => g.serial === newGroup.serial);
+    _updateGroups(newGroups) {
+        // Simple approach: replace all groups and mark new ones
+        const existingSerials = new Set(this.state.groups.map(g => g.serial));
         
-        if (existingIndex >= 0) {
-            // Update existing group
-            this.state.groups[existingIndex] = newGroup;
-        } else {
-            // Add new group at the beginning
-            this.state.groups.unshift(newGroup);
-            newGroup._isNew = true; // Mark as new for styling
-        }
+        newGroups.forEach(group => {
+            if (!existingSerials.has(group.serial)) {
+                group._isNew = true; // Mark as new for styling
+            }
+        });
 
-        // Re-render the table with updated data
+        this.state.groups = newGroups;
         this.table.render(this.state.groups, {
             onToggle: (i) => this.table.toggle(i),
             onEventClick: (gi, ei) => this.showEventDetails(gi, ei)
         });
-        
-        // Remove the new flag after animation
-        if (newGroup._isNew) {
-            setTimeout(() => {
-                delete newGroup._isNew;
-                this.table.render(this.state.groups, {
-                    onToggle: (i) => this.table.toggle(i),
-                    onEventClick: (gi, ei) => this.showEventDetails(gi, ei)
-                });
-            }, 1000);
-        }
+
+        // Remove new flags after animation
+        setTimeout(() => {
+            this.state.groups.forEach(group => delete group._isNew);
+            this.table.render(this.state.groups, {
+                onToggle: (i) => this.table.toggle(i),
+                onEventClick: (gi, ei) => this.showEventDetails(gi, ei)
+            });
+        }, 1000);
     }
+
 
     async _loadBanner() {
         try {
@@ -293,6 +278,7 @@ class App {
             console.warn('Could not load banner:', err.message);
         }
     }
+
 
     showEventDetails(groupIndex, eventIndex) {
         const g = this.state.groups[groupIndex];
@@ -357,9 +343,9 @@ document.addEventListener('DOMContentLoaded', () => {
     app.init();
 });
 
-// Clean up EventSource when page unloads
+// Clean up polling when page unloads
 window.addEventListener('beforeunload', () => {
-    if (window.app && window.app.eventSource) {
-        window.app.eventSource.close();
+    if (window.app && window.app.pollingInterval) {
+        clearInterval(window.app.pollingInterval);
     }
 });

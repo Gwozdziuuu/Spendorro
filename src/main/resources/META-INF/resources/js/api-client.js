@@ -1,7 +1,3 @@
-// Import all model classes
-// Note: In browser environment, these should be loaded via script tags in HTML
-// In Node.js environment, these will be loaded via require()
-
 // REST API Client - All API calls extracted from the application
 class RestApiClient {
     
@@ -32,14 +28,6 @@ class RestApiClient {
         return await response.text();
     }
 
-    /**
-     * Connect to Server-Sent Events stream for real-time updates
-     * @returns {EventSource} EventSource instance
-     */
-    connectToEventStream() {
-        return new EventSource('/events/stream');
-    }
-
     // ========== Chat/Message API ==========
 
     /**
@@ -50,7 +38,7 @@ class RestApiClient {
     async sendMessage(text) {
         const messageRequest = new MessageRequest(text);
         
-        const response = await fetch('/api/message', {
+        const response = await fetch('/message', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -76,7 +64,7 @@ class RestApiClient {
         const uploadRequest = new FileUploadRequest(file, text, fileName || file.name);
         const formData = uploadRequest.toFormData();
 
-        const response = await fetch('/api/upload', {
+        const response = await fetch('/upload', {
             method: 'POST',
             body: formData
         });

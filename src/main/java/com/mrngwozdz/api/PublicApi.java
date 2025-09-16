@@ -12,7 +12,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 @Tag(name = "Public API", description = "Public API for application communication")
-@Path("/api")
+@Path("")
 @Produces(MediaType.APPLICATION_JSON)
 public interface PublicApi {
 
