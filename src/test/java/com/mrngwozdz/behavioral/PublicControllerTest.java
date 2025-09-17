@@ -5,8 +5,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mrngwozdz.AbstractIntegrationTest;
 import com.mrngwozdz.api.model.response.ProcessMessageResponse;
 import com.mrngwozdz.controller.PublicControllerUtils;
+import com.mrngwozdz.integration.openai.OpenAiService;
+import com.mrngwozdz.integration.openai.model.OpenAiProcessRequest;
+import com.mrngwozdz.platform.result.Failure;
+import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
+import io.vavr.control.Either;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -19,18 +25,35 @@ import static org.assertj.core.api.Assertions.assertThat;
 @QuarkusTest
 class PublicControllerTest extends AbstractIntegrationTest {
 
+    @InjectMock
+    OpenAiService openAiService;
+
     @Test
     void shouldHandleRegularMessage() {
+        // Mock OpenAI service response
+        Mockito.when(openAiService.processRequest(Mockito.any(OpenAiProcessRequest.class)))
+                .thenReturn(Either.right("{\"result\": \"Hello response from OpenAI!\"}"));
+
         var request = """
                     {"text": "Hello World!"}
                     """;
-        PublicControllerUtils.processMessage(request)
+        var response = PublicControllerUtils.processMessage(request)
                 .statusCode(200)
                 .extract().as(ProcessMessageResponse.class);
+
+        // Verify OpenAI service was called
+        Mockito.verify(openAiService).processRequest(Mockito.any(OpenAiProcessRequest.class));
+
+        // Verify the response contains OpenAI result
+        assertThat(response.processMessage().value()).contains("Hello response from OpenAI!");
     }
 
     @Test
     void shouldHandlePngUploadWithText() throws IOException {
+        // Mock OpenAI service response for file upload
+        Mockito.when(openAiService.processRequest(Mockito.any(OpenAiProcessRequest.class)))
+                .thenReturn(Either.right("{\"result\": \"Image processed successfully!\"}"));
+
         // Create a minimal PNG byte array (1x1 transparent PNG)
         byte[] originalPngBytes = {
             (byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
@@ -50,26 +73,15 @@ class PublicControllerTest extends AbstractIntegrationTest {
                 .statusCode(200)
                 .extract().as(ProcessMessageResponse.class);
 
-        // Parse the JSON response to get image URL
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode jsonNode = mapper.readTree(response.processMessage().value());
+        // Verify OpenAI service was called with proper parameters
+        Mockito.verify(openAiService).processRequest(Mockito.argThat(request ->
+            request.text().equals("Hello with image!") &&
+            request.imageUrl() != null &&
+            request.imageUrl().contains(".png")
+        ));
 
-        assertThat(jsonNode.has("image_url")).isTrue();
-        String imageUrl = jsonNode.get("image_url").asText();
-        assertThat(imageUrl).contains("http").contains(".png");
-
-        // Download the image from MinIO and verify it's the same
-        URI uri = URI.create(imageUrl);
-        HttpURLConnection connection = (HttpURLConnection) uri.toURL().openConnection();
-        connection.setRequestMethod("GET");
-
-        assertThat(connection.getResponseCode()).isEqualTo(200);
-        assertThat(connection.getContentType()).isEqualTo("image/png");
-
-        try (InputStream downloadedImageStream = connection.getInputStream()) {
-            byte[] downloadedBytes = downloadedImageStream.readAllBytes();
-            assertThat(downloadedBytes).isEqualTo(originalPngBytes);
-        }
+        // Verify response contains OpenAI result
+        assertThat(response.processMessage().value()).contains("Image processed successfully!");
     }
 
 }
