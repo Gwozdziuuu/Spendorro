@@ -32,6 +32,11 @@ jobs:
     
     - name: Run tests
       run: mvn test
+      env:
+        TELEGRAM_BOT_TOKEN: test_token
+        MINIO_SECRET_KEY: test_secret
+        OPENAI_TOKEN: test_token
+        KEYCLOAK_CLIENT_SECRET: test_secret
     
     - name: Build native executable
       run: mvn package -Dnative -DskipTests
