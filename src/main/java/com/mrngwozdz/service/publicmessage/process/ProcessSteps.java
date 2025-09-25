@@ -1,6 +1,5 @@
 package com.mrngwozdz.service.publicmessage.process;
 
-import com.mrngwozdz.common.annotation.LogRequestResponse;
 import com.mrngwozdz.platform.result.Failure;
 import io.vavr.control.Either;
 import lombok.extern.slf4j.Slf4j;
@@ -8,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import static com.mrngwozdz.service.publicmessage.process.ProcessMethods.uploadImageToMinio;
 
 @Slf4j
-@LogRequestResponse
 public class ProcessSteps {
 
     private ProcessSteps() {}

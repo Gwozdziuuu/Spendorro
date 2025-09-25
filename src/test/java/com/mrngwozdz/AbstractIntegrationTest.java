@@ -2,13 +2,9 @@ package com.mrngwozdz;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.mrngwozdz.service.appevent.data.EventRepository;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.restassured.RestAssured;
-import jakarta.inject.Inject;
-import io.quarkus.test.TestTransaction;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.testcontainers.containers.MinIOContainer;
 
@@ -22,9 +18,6 @@ public abstract class AbstractIntegrationTest {
 
     protected ObjectMapper objectMapper;
 
-    @Inject
-    protected EventRepository eventRepository;
-
     @BeforeEach
     public void setup() {
         RestAssured.basePath = "";
@@ -36,7 +29,6 @@ public abstract class AbstractIntegrationTest {
     @BeforeEach
     void cleanupBeforeTest() {
         log.info("Running cleanup!");
-        eventRepository.deleteAllEvents();
     }
 
     public static class MinioTestResource implements io.quarkus.test.common.QuarkusTestResourceLifecycleManager {
@@ -54,8 +46,6 @@ public abstract class AbstractIntegrationTest {
 
         @Override
         public void stop() {
-            // Don't stop the container here, let it run for the entire test suite
-            // minioContainer.stop();
         }
     }
 }

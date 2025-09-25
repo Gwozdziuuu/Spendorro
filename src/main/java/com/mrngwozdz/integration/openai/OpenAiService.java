@@ -1,6 +1,5 @@
 package com.mrngwozdz.integration.openai;
 
-import com.mrngwozdz.common.annotation.LogRequestResponse;
 import com.mrngwozdz.integration.openai.model.OpenAiProcessRequest;
 import com.mrngwozdz.platform.result.ErrorCode;
 import com.mrngwozdz.platform.result.Failure;
@@ -17,7 +16,6 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @Slf4j
 @ApplicationScoped
-@LogRequestResponse
 public class OpenAiService {
 
     private final String openAiUrl;

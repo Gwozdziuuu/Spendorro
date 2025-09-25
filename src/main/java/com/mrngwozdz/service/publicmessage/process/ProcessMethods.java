@@ -1,5 +1,7 @@
 package com.mrngwozdz.service.publicmessage.process;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mrngwozdz.integration.openai.OpenAiService;
 import com.mrngwozdz.integration.openai.model.OpenAiProcessRequest;
 import com.mrngwozdz.platform.result.ErrorCode;
@@ -9,8 +11,6 @@ import io.vavr.control.Either;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.ByteArrayInputStream;
-import java.util.HashMap;
-import java.util.Map;
 
 @Slf4j
 public class ProcessMethods {
@@ -43,25 +43,18 @@ public class ProcessMethods {
         return Either.right(imageUrl);
     }
 
-    private static String getContentType(String fileName) {
-        if (fileName == null) {
-            return "application/octet-stream";
-        }
-        String lowerFileName = fileName.toLowerCase();
-        if (lowerFileName.endsWith(".png")) {
-            return "image/png";
-        } else if (lowerFileName.endsWith(".jpg") || lowerFileName.endsWith(".jpeg")) {
-            return "image/jpeg";
-        }
-        return "application/octet-stream";
+    public static Either<Failure, String> callOpenAiService(OpenAiProcessRequest request, OpenAiService openAiService) {
+        log.info("Calling OpenAI service with request");
+        return openAiService.processRequest(request)
+                .flatMap(ProcessMethods::parseOpenAiResponse);
     }
 
     public static Either<Failure, OpenAiProcessRequest> buildOpenAiRequest(ProcessHelper helper) {
         log.info("Building OpenAI request");
 
         String outputExample = (helper.getOutputExample() != null && !helper.getOutputExample().isEmpty())
-            ? helper.getOutputExample()
-            : null;
+                ? helper.getOutputExample()
+                : null;
 
         OpenAiProcessRequest request = new OpenAiProcessRequest(
                 helper.getText() != null ? helper.getText() : "",
@@ -77,8 +70,62 @@ public class ProcessMethods {
         return Either.right(request);
     }
 
-    public static Either<Failure, String> callOpenAiService(OpenAiProcessRequest request, OpenAiService openAiService) {
-        log.info("Calling OpenAI service with request");
-        return openAiService.processRequest(request);
+    private static String getContentType(String fileName) {
+        if (fileName == null) {
+            return "application/octet-stream";
+        }
+        String lowerFileName = fileName.toLowerCase();
+        if (lowerFileName.endsWith(".png")) {
+            return "image/png";
+        } else if (lowerFileName.endsWith(".jpg") || lowerFileName.endsWith(".jpeg")) {
+            return "image/jpeg";
+        }
+        return "application/octet-stream";
+    }
+
+    private static Either<Failure, String> parseOpenAiResponse(String jsonResponse) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(jsonResponse);
+
+            if (jsonNode.has("response")) {
+                String response = jsonNode.get("response").asText();
+                String decodedResponse = decodeUnicodeEscapes(response);
+                log.info("Successfully parsed OpenAI response, extracted response field and decoded unicode");
+                return Either.right(decodedResponse);
+            } else {
+                log.warn("OpenAI response does not contain 'response' field: {}", jsonResponse);
+                return Either.left(Failure.of(ErrorCode.IO_ERROR, "OpenAI response missing 'response' field"));
+            }
+        } catch (Exception e) {
+            log.error("Failed to parse OpenAI response: {}", e.getMessage());
+            return Either.left(Failure.of(ErrorCode.IO_ERROR, "Failed to parse OpenAI response: " + e.getMessage()));
+        }
+    }
+
+    private static String decodeUnicodeEscapes(String input) {
+        if (input == null) {
+            return null;
+        }
+
+        StringBuilder result = new StringBuilder();
+        int i = 0;
+        while (i < input.length()) {
+            if (i < input.length() - 5 && input.charAt(i) == '\\' && input.charAt(i + 1) == 'u') {
+                try {
+                    String unicodeStr = input.substring(i + 2, i + 6);
+                    int codePoint = Integer.parseInt(unicodeStr, 16);
+                    result.append((char) codePoint);
+                    i += 6;
+                } catch (NumberFormatException e) {
+                    result.append(input.charAt(i));
+                    i++;
+                }
+            } else {
+                result.append(input.charAt(i));
+                i++;
+            }
+        }
+        return result.toString();
     }
 }
