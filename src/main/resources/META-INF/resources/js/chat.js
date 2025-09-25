@@ -84,7 +84,6 @@ class ChatApp {
                 // Send text only using API client
                 result = await this.apiClient.sendMessage(text);
             }
-            console.log('API Response:', result); // Debug log
             
             // Add bot response to UI
             if (result.processMessage && result.processMessage.value) {
@@ -103,7 +102,6 @@ class ChatApp {
             }
 
         } catch (error) {
-            console.error('Error sending message:', error);
             this.addErrorMessage('Błąd podczas wysyłania wiadomości: ' + error.message);
         } finally {
             this.setLoading(false);

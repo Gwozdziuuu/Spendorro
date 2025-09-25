@@ -5,13 +5,11 @@ import com.mrngwozdz.api.model.request.MessageRequest;
 import com.mrngwozdz.api.model.request.FileUploadRequest;
 import com.mrngwozdz.api.model.response.ProcessMessageResponse;
 import com.mrngwozdz.service.publicmessage.PublicMessageService;
-import com.mrngwozdz.common.annotation.LogRequestResponse;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import java.util.Map;
 
-@LogRequestResponse
 public class PublicController implements PublicApi {
 
     private final PublicMessageService publicMessageService;

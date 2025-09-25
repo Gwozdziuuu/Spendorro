@@ -1,20 +1,5 @@
 // REST API Client - All API calls extracted from the application
 class RestApiClient {
-    
-    // ========== Events API ==========
-    
-    /**
-     * Get all events from the server
-     * @returns {Promise<Array>} Array of event groups
-     */
-    async getEvents() {
-        const response = await fetch('/events');
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        const data = await response.json();
-        return Array.isArray(data?.events) ? data.events : [];
-    }
 
     /**
      * Get banner text from the server
@@ -84,11 +69,8 @@ class RestApiClient {
 // ========== API Endpoints Configuration ==========
 
 const API_ENDPOINTS = {
-    // Events endpoints
-    EVENTS: '/events',
     BANNER: '/banner',
-    EVENTS_STREAM: '/events/stream',
-    
+
     // Chat/Message endpoints
     MESSAGE: '/api/message',
     UPLOAD: '/api/upload'

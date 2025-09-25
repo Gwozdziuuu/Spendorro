@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Event Monitor - Quarkus Application (SOLID refactor)</title>
+    <title>Spendorro - Quarkus Application</title>
     <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
 <!-- Header -->
 <div class="page-header">
     <div id="banner-container" class="banner-text" style="display: none;"></div>
-    <h1 class="page-title">Executions</h1>
-    <p class="page-subtitle">API events and requests in real-time</p>
+    <h1 class="page-title">Spendorro</h1>
+    <p class="page-subtitle">Expense tracking application</p>
     <nav class="nav-links">
         <a href="/chat.html">💬 Chat</a>
     </nav>
@@ -19,48 +19,13 @@
 
 <!-- Main -->
 <div class="main-content">
-    <div id="events-loading" class="loading-container">
-        <div class="spinner"></div>
-        <p style="margin-top:1rem;">Loading events...</p>
-    </div>
-
-    <div id="events-error" class="error-alert">
-        <strong>Error:</strong> <span id="error-message"></span>
-    </div>
-
-    <div id="events-container" style="display:none;">
-        <h2>Recent Event Groups</h2>
-        <p>Groups of related API events organized by request correlation ID. Click on a group to expand and see individual events.</p>
-
-        <table class="events-table">
-            <thead>
-            <tr>
-                <th></th>
-                <th>Method</th>
-                <th>Status</th>
-                <th>Duration</th>
-                <th>Events</th>
-            </tr>
-            </thead>
-            <tbody id="events-tbody"></tbody>
-        </table>
+    <div class="welcome-container">
+        <h2>Welcome to Spendorro</h2>
+        <p>Your personal expense tracking application</p>
     </div>
 </div>
-
-<!-- Modal -->
-<div id="event-details-modal" class="modal" aria-hidden="true">
-    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="event-details-title">
-        <button class="modal-close" id="modal-close" title="Close">&times;</button>
-        <div id="modal-content"></div>
-    </div>
-</div>
-
 
 <!-- Load API model classes in correct dependency order -->
-<!-- DTOs first -->
-<script src="js/api/model/EventItemDTO.js"></script>
-<script src="js/api/model/EventGroupDTO.js"></script>
-
 <!-- Request models -->
 <script src="js/api/model/request/MessageRequest.js"></script>
 <script src="js/api/model/request/FileUploadRequest.js"></script>
@@ -68,12 +33,8 @@
 <!-- Response models -->
 <script src="js/api/model/response/ProcessMessage.js"></script>
 <script src="js/api/model/response/ProcessMessageResponse.js"></script>
-<script src="js/api/model/response/GetEventsResponse.js"></script>
 
 <!-- API Client -->
 <script src="js/api-client.js"></script>
-
-<!-- Main application -->
-<script src="js/app.js"></script>
 </body>
 </html>
